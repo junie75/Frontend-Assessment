@@ -1,16 +1,33 @@
-import { Stack, Typography } from "@mui/material";
+import { Container, Stack, Typography, Box } from "@mui/material";
+import OperatorView from "@/../components/OperatorView";
+import OpView from "../../components/OpView";
+import { Op } from "../../types";
 
-export default function Home() {
+export default async function Home() {
+  const res = await fetch("https://frontend-challenge.veryableops.com/");
+  const data = await res.json();
+
+  const ops: Op[] = data ?? [];
+
+  console.log(data[0]);
+  console.log("testing baby");
   return (
-    <Stack
+    <Box
       sx={{
         width: "100%",
-        height: "100vh",
+        minHeight: "100vh",
+        flex: 1,
+        display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        backgroundColor: "captain.one",
       }}
     >
-      <Typography variant="h1">Hello World</Typography>
-    </Stack>
+      <Stack spacing={4}>
+        {ops.map((op) => (
+          <OpView op={op} key={op.publicId} />
+        ))}
+      </Stack>
+    </Box>
   );
 }
