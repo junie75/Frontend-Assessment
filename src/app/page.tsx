@@ -6,7 +6,6 @@ import { Op } from "../../types";
 
 //function to fetch data
 const fetchData = async () => {
-  // await new Promise((resolve) => setTimeout(resolve, 3000));
   const res = await fetch("https://frontend-challenge.veryableops.com/");
 
   //if there is an issue with fetch throw error
