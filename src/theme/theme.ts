@@ -253,7 +253,6 @@ export const themeV3 = createTheme({
       darkColorOnColor: "#141414",
     },
 
-    //background acceents
     iceberg: {
       main: "#E0F2F1",
     },

@@ -1,35 +1,29 @@
-import {
-  Container,
-  Stack,
-  Typography,
-  Box,
-  TextField,
-  TableContainer,
-  Table,
-  Paper,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-} from "@mui/material";
-import OperatorView from "../../components/OperatorRow";
+// Page shell for home page
+
+import { Box } from "@mui/material";
 import OpView from "../../components/OpView";
 import { Op } from "../../types";
 
-export const checkIn = (employeeId: number) => {
-  console.log("user checked in", employeeId);
+//function to fetch data
+const fetchData = async () => {
+  // await new Promise((resolve) => setTimeout(resolve, 3000));
+  const res = await fetch("https://frontend-challenge.veryableops.com/");
+
+  //if there is an issue with fetch throw error
+  if (!res.ok) {
+    // return jsonData;   // -- uncomment for when working from a diff location and diff ip address
+    throw new Error("Failed to fetch operations data, please try again later.");
+  }
+
+  //read the json data
+  const data = await res.json();
+  return data;
 };
 
-// type operatorStatus = [{opId: string, checkedIn: boolean, checkedInTime?: string, checkedOut: boolean, checkedOutTime: string }]
-
 export default async function Home() {
-  const res = await fetch("https://frontend-challenge.veryableops.com/");
-  const data = await res.json();
+  const data = await fetchData();
 
-  const ops: Op[] = data ?? [];
-
-  console.log(data[0]);
-  console.log("testing baby");
+  const ops: Op[] = data ?? []; //cast data to Op array, if no data make empty array
 
   return (
     <Box
@@ -41,29 +35,10 @@ export default async function Home() {
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: "captain.one",
-        p: 10,
+        p: { xs: 2, sm: 4, md: 6 },
       }}
     >
-      <Stack
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-
-          width: "100%",
-        }}
-        spacing={2}
-      >
-        <TextField
-          id="filled-basic"
-          label="Search..."
-          variant="filled"
-          color="secondary"
-          // fullWidth={true}
-          sx={{ backgroundColor: "captain.three" }}
-        />
-        <OpView ops={ops} />
-      </Stack>
+      <OpView ops={ops} />
     </Box>
   );
 }

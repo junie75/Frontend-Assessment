@@ -1,12 +1,11 @@
+//Container for the main table view of operations and operators. Handles search and filter functionality, as well as the toggle to expand and collapse all operator rows.
+
 "use client";
 
 import {
-  Stack,
   Typography,
   Container,
   Box,
-  Card,
-  Collapse,
   TableContainer,
   Table,
   Paper,
@@ -14,127 +13,130 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  IconButton,
+  TextField,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
-import { Op, Operator } from "../types";
-import OperatorView from "./OperatorRow";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { useState } from "react";
+import { Op } from "../types";
+import { useMemo, useState } from "react";
 import OpRow from "./OpRow";
 
-// const columns: GridColDef<Operator>[] = [
-//   {
-//     field: "firstName",
-//     headerName: "First name",
-//     width: 150,
-//     editable: false,
-//   },
-//   {
-//     field: "lastName",
-//     headerName: "Last name",
-//     width: 150,
-//     editable: false,
-//   },
-//   {
-//     field: "opsCompleted",
-//     headerName: "Operations Completed",
-//     type: "number",
-//     width: 110,
-//     editable: false,
-//   },
-//   {
-//     field: "reliability",
-//     headerName: "Reliability",
-//     type: "number",
-//     width: 110,
-//     editable: false,
-//     valueGetter: (value) => {
-//       if (!value) {
-//         return value;
-//       }
-//       return value * 100;
-//     },
-//     valueFormatter: (value?: number) => {
-//       if (value == null) {
-//         return "";
-//       }
-//       return `${value.toLocaleString()} %`;
-//     },
-//   },
-//   {
-//     field: "endorsements",
-//     headerName: "Endorsments",
-//     width: 800,
-//     editable: false,
-//     sortable: false,
-//   },
-// ];
-
 export default function OpView({ ops }: { ops: Op[] }) {
-  //   return (
-  //     <Box
-  //       sx={{
-  //         // maxWidth: 800,
-  //         p: 5,
-  //         backgroundColor: "captain.three",
-  //       }}
-  //     >
-  //       <Stack spacing={2}>
-  //         <Typography variant="h1">{op.opTitle}</Typography>
-  //         <Typography variant="h5">ID: {op.publicId}</Typography>
-  //         <Typography variant="h5">
-  //           Operators Needed: {op.operatorsNeeded}
-  //         </Typography>
-  //         <Typography variant="h5">
-  //           Shift Time: {getLocalTime(op.startTime)} - {getLocalTime(op.endTime)}
-  //         </Typography>
-  //         <Typography variant="h5">Operators: </Typography>
-  //       </Stack>
+  const [searchText, setSearchText] = useState(""); //state for search input
+  const [toggleExpandAll, setToggleExpandAll] = useState<boolean>(true); //state for toggle switch to expand/collapse all operator rows, default to expand all
 
-  //       <Box>
-  //         <DataGrid
-  //           rows={op.operators}
-  //           columns={columns}
-  //           //   initialState={{
-  //           //     pagination: {
-  //           //       paginationModel: {
-  //           //         pageSize: 5,
-  //           //       },
-  //           //     },
-  //           //   }}
-  //           //   pageSizeOptions={[5]}
-  //           checkboxSelection
-  //           disableRowSelectionOnClick
-  //         />
-  //       </Box>
+  //filter and sort ops based on search text
+  const filteredOps = useMemo(() => {
+    const term = searchText.toLowerCase().trim(); //clean and normalize search term for validation
 
-  //       {/* <Stack spacing={2}>
-  //         {op.operators.map((operator) => (
-  //           <OperatorView operator={operator} key={operator.id} />
-  //         ))}
-  //       </Stack> */}
-  //     </Box>
-  //   );
+    if (!term) return ops; //if search term is empty display all data
+
+    const matches = ops
+      .map((op) => {
+        //check if operation title or public id match the search term
+        const opMatches =
+          op.opTitle.toLowerCase().includes(term) ||
+          op.publicId.toLowerCase().includes(term);
+
+        //check if operator first or last name matches the search term
+        const matchingOperators = op.operators.filter(
+          (operator) =>
+            operator.firstName.toLowerCase().includes(term) ||
+            operator.lastName.toLowerCase().includes(term),
+        );
+
+        //if there is a match for op, display op (with all the operators)
+        if (opMatches) {
+          return op;
+        }
+
+        //if there is not a match for op but there is a match for operators, display the op with only the matching operators
+        if (matchingOperators.length > 0) {
+          return {
+            ...op,
+            operators: matchingOperators,
+          };
+        }
+
+        return null; //if no match at all return null
+      })
+      .filter((op): op is Op => op !== null); //filter out null values
+
+    return matches;
+  }, [ops, searchText]);
+
+  //function to handle toggle switch for expanding/collapsing all operator rows
+  const handleToggleSwitch = () => {
+    if (toggleExpandAll === null) {
+      setToggleExpandAll(true);
+    }
+
+    setToggleExpandAll((prev) => !prev);
+  };
 
   return (
-    <TableContainer component={Paper}>
-      <Table aria-label="simple table">
-        <TableHead>
-          <TableRow>
-            <TableCell>Op Title</TableCell>
-            <TableCell align="right">Public ID</TableCell>
-            <TableCell align="right">Operators Needed</TableCell>
-            <TableCell align="right">Start Time</TableCell>
-            <TableCell align="right">End Time</TableCell>
-            <TableCell />
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {ops.map((op) => (
-            <OpRow op={op} />
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <Container>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+        }}
+      >
+        <FormControlLabel
+          control={
+            <Switch
+              color="default"
+              defaultChecked
+              onChange={handleToggleSwitch}
+            />
+          }
+          label={toggleExpandAll ? "Toggle Close" : "Toggle Open"}
+          sx={{ color: "primary.contrastText" }}
+        />
+        <TextField
+          label="Search..."
+          variant="filled"
+          color="secondary"
+          value={searchText}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            setSearchText(event.target.value);
+          }}
+          sx={{ backgroundColor: "captain.three" }}
+        />
+      </Box>
+      <TableContainer component={Paper}>
+        <Table aria-label="op table">
+          <TableHead>
+            <TableRow sx={{ backgroundColor: "hulk.two" }}>
+              <TableCell>Op Title</TableCell>
+              <TableCell align="right">Public ID</TableCell>
+              <TableCell align="right">Operators Needed</TableCell>
+              <TableCell align="right">Start Time</TableCell>
+              <TableCell align="right">End Time</TableCell>
+              <TableCell />
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredOps.length > 0 ? (
+              filteredOps.map((op) => (
+                <OpRow
+                  op={op}
+                  key={op.publicId}
+                  toggleExpand={toggleExpandAll}
+                />
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6}>
+                  <Typography variant="h5" sx={{ textAlign: "center" }}>
+                    No Results Found
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Container>
   );
 }
